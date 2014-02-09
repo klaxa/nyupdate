@@ -147,7 +147,7 @@ class Torrentclient(threading.Thread):
 				if torrent.is_seed():
 					log(green("Torrent: " + torrent.name() + " is done. Removed."))
 					if self.status_mail:
-						self.send_mail("Torrent Complete!", "Torrent %s was completed!" % (torrent.name()))
+						threading.Thread(target=self.send_mail, args=("Torrent Complete!", "Torrent %s was completed!" % (torrent.name()))).start()
 					os.remove(self.files[torrent.name()])
 					self.session.remove_torrent(torrent)
 			time.sleep(REFRESH_INTERVAL)
