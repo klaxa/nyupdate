@@ -1,4 +1,10 @@
+#!/usr/bin/python3
+
 # Author: Jan 'jarainf' Rathner <jan@rathner.net>
+
+# Sun Feb 09 2014 added shebang
+# klaxa <klaxa1337@googlemail.com>
+
 
 import feedparser
 import re
@@ -8,6 +14,7 @@ import sys
 import signal
 from os.path import expanduser
 from os import linesep
+import Torrentclient
 
 BASEDIR = expanduser('~/.nyupdate/')
 SEEDFILE = BASEDIR + 'feeds'
@@ -17,6 +24,9 @@ RED = '\033[31m'
 BLUE = '\033[34m'
 GREEN = '\033[32m'
 ENDC = '\033[0m'
+
+tc = Torrentclient.Torrentclient(status_mail=True)
+tc.start()
 
 def _get_torrents(url):
 	rssfeed = feedparser.parse(url)
@@ -47,7 +57,8 @@ def _check_rss(feeds):
 	return feeds
 
 def _addtorrent(url):
-	subprocess.call(['transmission-remote', '--add', url])
+	#subprocess.call(['transmission-remote', '--add', url])
+	tc.add_torrent(url)
 
 def _read_feeds():
 	feeds = {}
@@ -83,6 +94,9 @@ def _write_feeds():
 def _exit(signum = None, frame = None):
 	print('Program is stopping now.')
 	_write_feeds()
+	print('Stopping Torrentclient.')
+	tc.kill()
+	tc.join()
 	print('Program has been successfully terminated!')
 	sys.exit(0)
 
