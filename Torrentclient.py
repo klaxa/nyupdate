@@ -68,11 +68,10 @@ class Torrentclient(threading.Thread):
 		filename = ""
 		try:
 			filename = re.sub(".*filename=\"", "", re.sub("\"$", "", dict(urllib_response.info())["Content-Disposition"]))
+			return filename
 		except BaseException as e:
 			log(yellow(traceback.format_exc()))
-			log(yellow("Falling back to url as filename."))
-			filename = re.findall("http[^\n]*", str(urllib_response.info()))[0]
-		return filename
+			return None
 	def set_upload_limit(self, limit):
 		settings = self.session.settings()
 		settings.upload_rate_limit = limit
@@ -93,6 +92,10 @@ class Torrentclient(threading.Thread):
 	
 	def add_torrent(self, url):
 		response = urllib.request.urlopen(url)
+		torrent_filename = self.get_filename(response)
+		if torrent_filename == None:
+			log(red("Failed to add torrent: " + url))
+			return
 		filename = self.torrent_dir + "/" + self.get_filename(response)
 		torrent = open(filename, "wb")
 		torrent.write(response.read())
@@ -148,3 +151,7 @@ class Torrentclient(threading.Thread):
 					os.remove(self.files[torrent.name()])
 					self.session.remove_torrent(torrent)
 			time.sleep(REFRESH_INTERVAL)
+		self.session.pause()
+		log(green("Pausing session..."))
+		while not self.session.is_paused():
+			time.sleep(1)
