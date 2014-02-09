@@ -65,8 +65,14 @@ class Torrentclient(threading.Thread):
 		self.session.set_settings(settings)
 
 	def get_filename(self, urllib_response):
-		return re.sub(".*filename=\"", "", re.sub("\"$", "", dict(urllib_response.info())["Content-Disposition"]))
-	
+		filename = ""
+		try:
+			filename = re.sub(".*filename=\"", "", re.sub("\"$", "", dict(urllib_response.info())["Content-Disposition"]))
+		except BaseException as e:
+			log(yellow(traceback.format_exc()))
+			log(yellow("Falling back to url as filename."))
+			filename = re.findall("http[^\n]*", str(urllib_response.info()))[0]
+		return filename
 	def set_upload_limit(self, limit):
 		settings = self.session.settings()
 		settings.upload_rate_limit = limit
